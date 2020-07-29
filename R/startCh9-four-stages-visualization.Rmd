@@ -1,0 +1,95 @@
+---
+title: "ch9"
+author: "Jin Chen"
+date: "7/27/2020"
+output: html_document
+---
+1) to confirm the Coors field reputation that it is the easiest baseball stadium for teams to score runs at
+2) if true, create a visual that informs its audience that Coors Field is the easiest baseball stadium to score runs at
+
+```{r}
+library(causact)
+library(tidyverse)
+
+baseballDF <- baseballData %>% 
+
+baseballData2 <- baseballDF %>% 
+  mutate(totalRuns = HomeScore + VisitorScore) %>% 
+  group_by(Home) %>% 
+  summarize(avgRuns = mean(totalRuns)) %>% 
+  arrange(desc(avgRuns))
+
+```
+
+Two main charateristics of the data determine the likely suitability of any aesthethic.
+1. Ordinality - or ordered data
+2. Cardinality - or number of distinct data values in a column
+
+```{r}
+#check cardinality aka number of rows
+baseballData2 %>% 
+  select(Home) %>% 
+  distinct() #we get 31 rows
+
+baseballData2 %>% 
+  ggplot(mapping = aes(x = Home, y = avgRuns)) +
+  geom_point()
+
+baseballData2 %>% 
+  ggplot(mapping = aes(x = Home, y = avgRuns)) +
+  geom_col() +
+  coord_flip()
+```
+
+```{r}
+#formatting the plot to make it persuasive
+baseballData2 %>% 
+  ggplot(mapping = aes(x = Home, y = avgRuns)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Colorado's Coors Field (COL) Is The Most Run-Friendly Baseball Stadium",
+       x = "Three-Letter Stadium Code",
+       y = "Average Runs Per Game",
+       caption = "Data from all games played between 2010-2014")
+
+```
+Now in order to color highlight COL, we must add an additional column that indicates whether or not the row is COL. We can then map this using the fill aesthetic
+
+```{r}
+plotDF = baseballData2 %>% 
+  mutate(Stadium = 
+           ifelse(Home == "COL",
+                  "Coors Field",
+                  "Other Stadium"))
+
+plotDF %>% 
+  ggplot(mapping = aes(x = Home, y = avgRuns)) +
+  geom_col(aes(fill = Stadium)) +
+  coord_flip() +
+  labs(title = "Colorado's Coors Field (COL) Is The Most Run-Friendly Baseball Stadium",
+       x = "Three-Letter Stadium Code",
+       y = "Average Runs Per Game",
+       caption = "Data from all games played between 2010-2014")
+
+```
+The graph looks good, but to make it even more clear, we can reorder the bars from highest to lowest
+
+```{r}
+library(ggthemes)
+FormattedPlot <- plotDF %>% 
+  mutate(Home = fct_reorder(Home,avgRuns)) %>% #fct_order(the original factor, the variable we want to order by)
+  ggplot(mapping = aes(x = Home, y = avgRuns)) +
+  geom_col(aes(fill = Stadium)) +
+  coord_flip() +
+  labs(title = "Colorado's Coors Field (COL) Is The Most Run-Friendly Baseball Stadium",
+       x = "Three-Letter Stadium Code",
+       y = "Average Runs Per Game",
+       caption = "Data from all games played between 2010-2014")
+
+FormattedPlot +
+  theme_tufte() +
+  scale_fill_manual(values = c("purple", "gray")) + #we use purple because its 1 of the colors of the Rockies team
+  theme(legend.position = "none")
+  
+```
+

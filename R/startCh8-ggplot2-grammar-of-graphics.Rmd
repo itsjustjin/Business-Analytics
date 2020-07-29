@@ -1,0 +1,73 @@
+---
+title: "Ch8"
+author: "Jin Chen"
+date: "7/26/2020"
+output: html_document
+---
+```{r}
+library(dplyr)
+
+ansDF <- anscombe %>% as_tibble()
+ansDF
+
+model1 = lm(y1 ~ x1, data = ansDF)  ##predict y1 using x1
+model2 = lm(y2 ~ x2, data = ansDF)  ##predict y2 using x2
+model3 = lm(y3 ~ x3, data = ansDF)  ##predict y3 using x3
+model4 = lm(y4 ~ x4, data = ansDF)  ##predict y4 using x4
+##show results of regression (i.e. intercept and slope)
+coef(model1)
+coef(model2)
+coef(model3)
+coef(model4)
+```
+
+```{r 8.2 ggplot:Using the Grammar of Graphics}
+library(ggplot2)
+
+ggplot(starwars, mapping = aes(x = height, y = mass)) +
+  geom_point(aes(color = gender)) #gender needs to be inside aes() because its a column of the DF
+
+ggplot(starwars, mapping = aes(x = height, y = mass)) +
+  geom_point(shape = 15, color = "red") #color red can go outside of aes() because it is a constant value
+
+ggplot(starwars, mapping = aes(x = height, y = mass)) +
+  geom_point() +
+  geom_text(aes(label = name), check_overlap = TRUE)
+
+
+## create mpgDF data frame
+mpgDF = mpg %>% 
+  group_by(manufacturer) %>%
+  summarize(cityMPG = mean(cty),
+            hwyMPG = mean(hwy),
+            numCarModels = n_distinct(model),
+            ) %>%
+  filter(numCarModels >= 2)
+
+mpgDF ## view contents of data frame
+
+mpgDF %>% 
+  ggplot(mapping = aes(x = manufacturer, y = numCarModels)) +
+  geom_col()
+
+mpgDF %>% 
+  ggplot() + 
+  geom_density(aes(x = cityMPG))
+
+mpgDF %>% 
+  ggplot() + 
+  geom_histogram
+
+
+mpgDF %>% 
+  ggplot() +
+  geom_linerange(aes(x = manufacturer, 
+                     ymin = cityMPG, 
+                     ymax = hwyMPG))
+
+mpgDF %>% 
+  ggplot() + 
+  geom_linerange(aes(x = manufacturer, ymin = cityMPG, ymax = hwyMPG)) +
+  coord_flip()
+```
+

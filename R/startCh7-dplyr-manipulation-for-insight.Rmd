@@ -1,0 +1,93 @@
+---
+title: "startCh7"
+author: "Jin Chen"
+date: "7/26/2020"
+output: html_document
+---
+
+```{r}
+library("causact")
+data("delivDF")
+delivDF
+
+```
+
+```{r 7.2 Lateness Calculation}
+library(lubridate)
+
+shipDF = delivDF
+shipDF$plannedShipDate = mdy(shipDF$plannedShipDate) #convert character to Date
+shipDF$actualShipDate = mdy(shipDF$actualShipDate)   #convert character to Date
+shipDF$actualShipDate[1] - shipDF$plannedShipDate[1]
+```
+As an analyst, it is your job to form an opinion and validate that opinion with your stakeholder about how you plan to translate real-world concerns into mathematical constructs. Do not immediately fire off an email everytime you have a question
+
+```{r}
+library(dplyr)
+
+shipDateDF = shipDF %>% 
+  select(shipID, plannedShipDate, actualShipDate) %>% 
+  distinct() ## get unique rows to avoid double counting
+shipDateDF
+
+#Add a column to capture lateness
+shipDateDF = shipDateDF %>% 
+  mutate(lateFlag = 
+           ifelse(actualShipDate > plannedShipDate, #ifelse returns TRUE if condition is TRUE and FALSE if condition is FALSE
+                  TRUE,
+                  FALSE))
+shipDateDF
+
+#now we count the number of TRUE and FALSE
+shipDateDF %>% 
+  group_by(lateFlag) %>% 
+  summarize(countLate = n()) %>% 
+  mutate(proportion = countLate / sum(countLate))
+```
+
+```{r 7.3 Bringing in Product Category Information}
+library(causact)
+data("prodLineDF")
+prodLineDF
+
+catDF = shipDF %>% 
+  left_join(prodLineDF) %>% 
+  filter(!is.na(prodCategory)) #filter out any NA
+```
+
+**Does service level (measured by on-time shipments) vary across product categories?**
+```{r 7.4 Answering the CEO's Questions}
+catDF %>% 
+  select(shipID, plannedShipDate, actualShipDate, prodCategory) %>% 
+  distinct() %>%  #one row per shipment/prodCategory
+  mutate(lateFlag = 
+           ifelse(actualShipDate > plannedShipDate,
+                  TRUE,
+                  FALSE)) %>% 
+  group_by(prodCategory, lateFlag) %>% 
+  summarize(countLate = n()) %>% 
+  mutate(proportion = countLate / sum(countLate)) %>% 
+  arrange(lateFlag, proportion)
+
+```
+From the above analysis, we find that there does seem to be discrepancies between on-time shipments by product category. Machines has the most late shipments (19%), SpareParts(15.8%) is next, and the remaining two, Liquids (8.1%) and Marketables (8.1%) have similar performance.
+
+**How often do orders include products from more than one product category?**
+```{r}
+numCatDF = catDF %>% 
+  select(shipID, plannedShipDate, actualShipDate, prodCategory) %>% 
+  distinct() %>%  #unique rows only
+  group_by(shipID) %>% 
+  summarize(numCategories = n())
+
+#print out summary
+numCatDF %>% 
+  group_by(numCategories) %>% 
+  summarize(numShipID = n()) %>% 
+  mutate(percentOfShipments =
+           numShipID/sum(numShipID))
+
+```
+The answer to this second question is about 22.5% of orders contain more than one product category. So, in conclusion, 22.5% of orders have more than one product category on them and yes, it does seem that the product categories are managed differently.
+
+

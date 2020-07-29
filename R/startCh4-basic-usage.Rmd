@@ -1,0 +1,75 @@
+---
+title: "Basic Usage"
+author: "Jin Chen"
+date: "7/25/2020"
+output: html_document
+---
+
+```{r}
+library(beepr)
+beep()
+
+beep(sound = "shotgun")
+beep(sound = "fanfare")
+beep(sound = "complete")
+
+```
+
+filter(): select subset of rows (i.e. observations). 
+arrange(): reorder rows
+select(): select subset of columns (i.e. variables).
+mutate(): create new columns that are functions of existing columns. 
+summarize(): collapse data into a single row. 
+
+n(): the number of observations in the current group
+n_distinct(): the number of unique values in x.
+first(x), 
+last(x) 
+nth(x, n):
+
+
+```{r}
+library(nycflights13)
+library(tidyverse)
+
+## Show the dataframe in the RStudio envirnoment
+flights = flights
+
+## just fyi, there are lots of datasets already in R
+#data()
+```
+
+```{r Basic dplyr functions}
+filter(flights, day ==1, month ==1)
+arrange(flights, year, month, day)
+arrange(flights, desc(arr_delay)) #sort by arr_delay in descending order
+
+select(flights,year,month,day) #select individual columns
+select(flights,year:day) #select all columns between year and day
+select(flights, -(year:day)) #select all columns except those from year to day
+distinct(select(flights, tailnum)) #returns unique tail numbers 
+
+flightSpeedDf = select(flights, distance, air_time)
+mutate(flightSpeedDf,
+       speed = distance / air_time * 60) #creates a new column speed
+
+summarize(flights, #summarize collapses a df into a single row
+          delay = mean(dep_delay, na.rm = TRUE))
+
+destinations = group_by(flights, dest)
+destDF = summarize(destinations,
+                   planes = n_distinct(tailnum), # unique planes
+                   flights = n() # number of flights
+                   )
+destDF
+
+#using pipes
+flights %>% 
+  select(distance, air_time, dest) %>% 
+  mutate(speed = distance / air_time * 60) %>% 
+  group_by(dest) %>% 
+  summarize(avgSpeed = mean(speed, na.rm = TRUE)) %>% 
+  arrange(desc(avgSpeed))
+```
+
+
