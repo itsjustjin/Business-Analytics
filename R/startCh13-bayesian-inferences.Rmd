@@ -1,0 +1,25 @@
+---
+title: "Bayesian Inferences"
+author: "Jin Chen"
+date: "7/29/2020"
+output: html_document
+---
+
+```{r}
+library(causact) # for rbern function
+set.seed(111)     # to get the same random numbers
+
+# Generate Which Manager Model is Correct
+# Map theta = 70% to the number 1 and
+# map theta = 20% to the number 0.
+
+sampleModel = rbern(n = 1, p = 0.5)
+theta = ifelse(sampleModel == 1,
+               0.7,
+               0.2)
+theta
+# Generate 20 sample stores for that theta
+rbern(n = 20, p = theta)
+
+```
+
